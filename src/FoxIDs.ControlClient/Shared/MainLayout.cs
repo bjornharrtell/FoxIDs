@@ -36,6 +36,8 @@ namespace FoxIDs.Client.Shared
         private string selectTrackError;
         private IEnumerable<Track> selectTrackTasks;
         private Modal myProfileModal;
+        private bool myProfileMasterMasterLogin;
+        private bool showMyProfileClaims;
         private IEnumerable<Claim> myProfileClaims;
         private Modal notAccessModal;
 
@@ -58,6 +60,9 @@ namespace FoxIDs.Client.Shared
         public NotificationLogic NotificationLogic { get; set; }
 
         [Inject]
+        public UserProfileLogic UserProfileLogic { get; set; }
+
+        [Inject]
         public TrackSelectedLogic TrackSelectedLogic { get; set; }
 
         [Inject]
@@ -65,6 +70,9 @@ namespace FoxIDs.Client.Shared
 
         [Inject]
         public TrackService TrackService { get; set; }
+
+        [Inject]
+        public UserService UserService { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -76,10 +84,16 @@ namespace FoxIDs.Client.Shared
         protected override async Task OnParametersSetAsync()
         {
             var user = (await authenticationStateTask).User;
-            if (user.Identity.IsAuthenticated && user.IsInRole(Constants.ControlApi.Role.TenantAdmin))
+            if (user.Identity.IsAuthenticated)
             {
                 await LoadAndSelectTracAsync();
                 myProfileClaims = user.Claims;
+                if (user.Claims.Where(c => c.Type == Constants.JwtClaimTypes.UpPartyType && c.Value == Constants.DefaultLogin.Name).Any() &&
+                    user.Claims.Where(c => c.Type == Constants.JwtClaimTypes.UpParty && c.Value == Constants.DefaultLogin.Name).Any() &&
+                    user.Claims.Where(c => c.Type == JwtClaimTypes.Email).Any())
+                {
+                    myProfileMasterMasterLogin = true;
+                }
             }
             else if(notAccessModal != null)
             {
@@ -172,6 +186,7 @@ namespace FoxIDs.Client.Shared
                 }
                 await LoadSelectTrackAsync();
                 await TrackSelectedLogic.TrackSelectedAsync(track);
+                await UserProfileLogic.UpdateTrackAsync(track.Name);
             }
             catch (FoxIDsApiException ex)
             {
@@ -189,7 +204,7 @@ namespace FoxIDs.Client.Shared
 
         private async Task OnSelectTrackAsync()
         {
-            await LoadAndSelectTracAsync(true);
+            await LoadAndSelectTracAsync(forceSelect: true);
             StateHasChanged();
         }
 
@@ -217,8 +232,8 @@ namespace FoxIDs.Client.Shared
                 selectTrackError = null;
                 await LoadSelectTrackAsync();
 
-                var trackCookieName = await TrackSelectedLogic.ReadTrackCookieAsync();
-                if (trackCookieName.IsNullOrEmpty() && await SelectTrackAsync(trackCookieName))
+                var userProfile = await UserProfileLogic.GetUserProfileAsync();
+                if (!string.IsNullOrWhiteSpace(userProfile?.LastTrackName) && await SelectTrackAsync(userProfile.LastTrackName))
                 {
                     return;
                 }
@@ -290,7 +305,18 @@ namespace FoxIDs.Client.Shared
 
         private async Task SelectTrackAsync(Track track)
         {
-            await TrackSelectedLogic.TrackSelectedAsync(track, RouteBindingLogic.IsMasterTenant);
+            if (!RouteBindingLogic.IsMasterTenant)
+            {
+                await UserProfileLogic.UpdateTrackAsync(track.Name);
+            }
+            await TrackSelectedLogic.TrackSelectedAsync(track);
+        }
+
+        public async Task ChangeMyPasswordAsync()
+        {
+            await UserService.UpdateMyUserAsync(new MyUser { ChangePassword = true });
+
+            await (OpenidConnectPkce as TenantOpenidConnectPkce).TenantLoginAsync(prompt: IdentityConstants.AuthorizationServerPrompt.Login);
         }
     }
 }
