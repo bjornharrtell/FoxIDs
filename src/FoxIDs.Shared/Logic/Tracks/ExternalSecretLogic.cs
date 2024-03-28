@@ -13,7 +13,7 @@ namespace FoxIDs.Logic
         private readonly Settings settings;
         private readonly TokenCredential tokenCredential;
 
-        public ExternalSecretLogic(Settings settings, TokenCredential tokenCredential, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public ExternalSecretLogic(Settings settings, IHttpContextAccessor httpContextAccessor, TokenCredential tokenCredential = null) : base(httpContextAccessor)
         {
             this.settings = settings;
             this.tokenCredential = tokenCredential;

@@ -17,7 +17,7 @@ namespace FoxIDs.Logic
         private readonly FoxIDsSettings settings;
         private readonly TokenCredential tokenCredential;
 
-        public ClientKeySecretLogic(FoxIDsSettings settings,TokenCredential tokenCredential, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public ClientKeySecretLogic(FoxIDsSettings settings, IHttpContextAccessor httpContextAccessor, TokenCredential tokenCredential = null) : base(httpContextAccessor)
         {
             this.settings = settings;
             this.tokenCredential = tokenCredential;

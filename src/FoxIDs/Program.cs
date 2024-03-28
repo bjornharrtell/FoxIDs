@@ -29,19 +29,11 @@ namespace FoxIDs
                 .UseStartup<Startup>()
                 .ConfigureLogging((context, logging) =>
                 {
-                    var connectionString = context.Configuration.GetSection("ApplicationInsights:ConnectionString")?.Value;                
-                    if (string.IsNullOrWhiteSpace(connectionString))
-                    {
-                        return;
-                    }
-
                     // When not in development, remove other loggers like console, debug, event source etc. and only use ApplicationInsights logging
                     if (!context.HostingEnvironment.IsDevelopment())
                     {
                         logging.ClearProviders();
                     }
-
-                    logging.AddApplicationInsights(configuration => configuration.ConnectionString = connectionString, options => { });
                 });
     }
 }

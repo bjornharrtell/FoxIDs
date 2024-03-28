@@ -24,7 +24,7 @@ namespace FoxIDs.Logic
         private readonly ITenantRepository tenantRepository;
         private readonly ExternalKeyLogic externalKeyLogic;
 
-        public TrackKeyLogic(FoxIDsSettings settings, TelemetryScopedLogger logger, TokenCredential tokenCredential, ITenantRepository tenantRepository, ExternalKeyLogic externalKeyLogic, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public TrackKeyLogic(FoxIDsSettings settings, TelemetryScopedLogger logger, ITenantRepository tenantRepository, ExternalKeyLogic externalKeyLogic, IHttpContextAccessor httpContextAccessor, TokenCredential tokenCredential = null) : base(httpContextAccessor)
         {
             this.settings = settings;
             this.logger = logger;

@@ -74,20 +74,6 @@ namespace FoxIDs.Infrastructure.Hosting
 
             services.AddScoped<FoxIDsApiRouteTransformer>();
 
-            services.AddHostedService<BackgroundQueueService>();
-
-            if (!env.IsDevelopment())
-            {
-                services.AddSingleton<TokenCredential, DefaultAzureCredential>();
-            }
-            else
-            {
-                services.AddSingleton<TokenCredential>(serviceProvider =>
-                {
-                    return new ClientSecretCredential(settings.ServerClientCredential?.TenantId, settings.ServerClientCredential?.ClientId, settings.ServerClientCredential?.ClientSecret);
-                });
-            }
-
             services.AddApiSwagger();
             services.AddAutoMapper();
 

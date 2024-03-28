@@ -120,7 +120,7 @@ namespace FoxIDs.Infrastructure.Hosting
 
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, FoxIDsSettings settings, IWebHostEnvironment env)
         {
-            (_, var connectionMultiplexer) = services.AddSharedInfrastructure(settings);
+            services.AddSharedInfrastructure(settings);
 
             services.AddSingleton<IStringLocalizer, FoxIDsStringLocalizer>();
             services.AddSingleton<IStringLocalizerFactory, FoxIDsStringLocalizerFactory>();
@@ -128,29 +128,6 @@ namespace FoxIDs.Infrastructure.Hosting
 
             services.AddScoped<FoxIDsRouteTransformer>();
             services.AddScoped<ICorsPolicyProvider, CorsPolicyProvider>();
-
-            if (!env.IsDevelopment())
-            {
-                services.AddSingleton<TokenCredential, DefaultAzureCredential>();
-            }
-            else
-            {
-                services.AddSingleton<TokenCredential>(serviceProvider =>
-                {
-                    return new ClientSecretCredential(settings.ServerClientCredential?.TenantId, settings.ServerClientCredential?.ClientId, settings.ServerClientCredential?.ClientSecret);
-                });
-            }
-
-            if (!env.IsDevelopment())
-            {
-                services.AddDataProtection()
-                    .PersistKeysToStackExchangeRedis(connectionMultiplexer, "data_protection_keys");
-
-                services.AddStackExchangeRedisCache(options => {
-                    options.Configuration = settings.RedisCache.ConnectionString;
-                    options.InstanceName = "cache";
-                });
-            }
 
             return services;
         }

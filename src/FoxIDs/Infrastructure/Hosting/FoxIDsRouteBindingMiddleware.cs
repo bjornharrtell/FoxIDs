@@ -24,7 +24,7 @@ namespace FoxIDs.Infrastructure.Hosting
         private readonly IDistributedCacheProvider cacheProvider;
         private readonly TokenCredential tokenCredential;
 
-        public FoxIDsRouteBindingMiddleware(RequestDelegate next, FoxIDsSettings settings, TrackCacheLogic trackCacheLogic, DownPartyCacheLogic downPartyCacheLogic, UpPartyCacheLogic upPartyCacheLogic, IDistributedCacheProvider cacheProvider, TokenCredential tokenCredential) : base(next, trackCacheLogic)
+        public FoxIDsRouteBindingMiddleware(RequestDelegate next, FoxIDsSettings settings, TrackCacheLogic trackCacheLogic, DownPartyCacheLogic downPartyCacheLogic, UpPartyCacheLogic upPartyCacheLogic, IDistributedCacheProvider cacheProvider, TokenCredential tokenCredential = null) : base(next, trackCacheLogic)
         {
             this.settings = settings;
             this.downPartyCacheLogic = downPartyCacheLogic;

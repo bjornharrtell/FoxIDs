@@ -40,8 +40,6 @@ namespace FoxIDs
                     {
                         logging.ClearProviders();
                     }
-
-                    logging.AddApplicationInsights(configuration => configuration.ConnectionString = connectionString, options => { });
                 });
     }
 }

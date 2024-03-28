@@ -13,14 +13,12 @@ namespace FoxIDs.Logic.Seed
     {
         private readonly TelemetryLogger logger;
         private readonly FoxIDsControlSettings settings;
-        private readonly IRepositoryClient repositoryClient;
         private readonly MasterTenantDocumentsSeedLogic masterTenantDocumentsSeedLogic;
 
-        public SeedLogic(TelemetryLogger logger, FoxIDsControlSettings settings, IRepositoryClient repositoryClient, MasterTenantDocumentsSeedLogic masterTenantDocumentsSeedLogic, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public SeedLogic(TelemetryLogger logger, FoxIDsControlSettings settings, MasterTenantDocumentsSeedLogic masterTenantDocumentsSeedLogic, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             this.logger = logger;
             this.settings = settings;
-            this.repositoryClient = repositoryClient;
             this.masterTenantDocumentsSeedLogic = masterTenantDocumentsSeedLogic;
         }
 
@@ -30,51 +28,7 @@ namespace FoxIDs.Logic.Seed
             {
                 if (settings.MasterSeedEnabled)
                 {
-                    try
-                    {
-                        await settings.CosmosDb.ValidateObjectAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidConfigException("The Cosmos DB configuration is required to create the master tenant documents.", ex);
-                    }
-
-                    var databaseResponse = await repositoryClient.Client.CreateDatabaseIfNotExistsAsync(settings.CosmosDb.DatabaseId);
-                    if (databaseResponse.StatusCode == HttpStatusCode.Created)
-                    {
-                        if (settings.CosmosDb.ContainerId == settings.CosmosDb.TtlContainerId)
-                        {
-                            var container = await databaseResponse.Database.CreateContainerIfNotExistsAsync(
-                                new ContainerProperties
-                                {
-                                    Id = settings.CosmosDb.TtlContainerId,
-                                    PartitionKeyPath = Constants.Models.CosmosPartitionKeyPath,
-                                    DefaultTimeToLive = -1
-                                });
-                            logger.Trace("One Cosmos DB Document container created.");
-                            (repositoryClient as RepositoryClientBase).SetContainers(container, container);
-                        }
-                        else
-                        {
-                            var container = await databaseResponse.Database.CreateContainerIfNotExistsAsync(new ContainerProperties
-                                {
-                                    Id = settings.CosmosDb.ContainerId,
-                                    PartitionKeyPath = Constants.Models.CosmosPartitionKeyPath
-                                });
-                            var ttlContainer = await databaseResponse.Database.CreateContainerIfNotExistsAsync(
-                                new ContainerProperties
-                                {
-                                    Id = settings.CosmosDb.TtlContainerId,
-                                    PartitionKeyPath = Constants.Models.CosmosPartitionKeyPath,
-                                    DefaultTimeToLive = -1
-                                });
-                            logger.Trace("Two Cosmos DB Document containers created.");
-                            (repositoryClient as RepositoryClientBase).SetContainers(container, ttlContainer);
-                        }
-                        
-                        await masterTenantDocumentsSeedLogic.SeedAsync();
-                        logger.Trace("Cosmos DB Document container(s) seeded.");
-                    }
+                    await masterTenantDocumentsSeedLogic.SeedAsync();
                 }
             }
             catch (Exception ex)

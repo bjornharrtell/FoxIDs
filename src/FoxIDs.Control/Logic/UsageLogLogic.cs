@@ -24,7 +24,7 @@ namespace FoxIDs.Logic
         private readonly ITenantRepository tenantRepository;
         private readonly TokenCredential tokenCredential;
 
-        public UsageLogLogic(FoxIDsControlSettings settings, TelemetryScopedLogger logger, ITenantRepository tenantRepository, TokenCredential tokenCredential, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public UsageLogLogic(FoxIDsControlSettings settings, TelemetryScopedLogger logger, ITenantRepository tenantRepository, IHttpContextAccessor httpContextAccessor, TokenCredential tokenCredential = null) : base(httpContextAccessor)
         {
             this.settings = settings;
             this.logger = logger;

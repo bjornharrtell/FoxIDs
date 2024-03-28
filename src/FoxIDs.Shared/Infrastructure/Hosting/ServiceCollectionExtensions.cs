@@ -4,6 +4,7 @@ using ITfoxtec.Identity.Discovery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
+using Npgsql.DocumentDB;
 using StackExchange.Redis;
 using System;
 using System.Net.Http;
@@ -21,7 +22,9 @@ namespace FoxIDs.Infrastructure.Hosting
 
             services.AddTransient<ClaimTransformValidationLogic>();
 
-            services.AddTransient<IDistributedCacheProvider, RedisCacheProvider>();
+            services.AddNpgsqlDocumentDB("Host=localhost;Username=postgres;Password=postgres;Database=foxids_master", null, ServiceLifetime.Singleton, "master");
+            services.AddNpgsqlDocumentDB("Host=localhost;Username=postgres;Password=postgres;Database=foxids_cache", null, ServiceLifetime.Singleton, "cache");
+            services.AddTransient<IDistributedCacheProvider, PgCacheProvider>();
             services.AddTransient<PlanCacheLogic>();
             services.AddTransient<TenantCacheLogic>();
             services.AddTransient<TrackCacheLogic>();
@@ -33,15 +36,13 @@ namespace FoxIDs.Infrastructure.Hosting
 
         public static IServiceCollection AddSharedRepository(this IServiceCollection services)
         {            
-            services.AddSingleton<IRepositoryClient, RepositoryClient>();
-            services.AddSingleton<IRepositoryBulkClient, RepositoryBulkClient>();
-            services.AddSingleton<IMasterRepository, MasterRepository>();
-            services.AddSingleton<ITenantRepository, TenantRepository>();
+            services.AddSingleton<IMasterRepository, PgMasterRepository>();
+            services.AddSingleton<ITenantRepository, PgTenantRepository>();
 
             return services;
         }
 
-        public static (IServiceCollection, IConnectionMultiplexer) AddSharedInfrastructure(this IServiceCollection services, Models.Config.Settings settings)
+        public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, Models.Config.Settings settings)
         {
             IdentityModelEventSource.ShowPII = true;
 
@@ -65,13 +66,10 @@ namespace FoxIDs.Infrastructure.Hosting
                 options.Timeout = TimeSpan.FromSeconds(30);
             });
 
-            var connectionMultiplexer = ConnectionMultiplexer.Connect(settings.RedisCache.ConnectionString);
-            services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
-
             services.AddSingleton<OidcDiscoveryHandlerService>();
             services.AddHostedService<OidcDiscoveryBackgroundService>();
 
-            return (services, connectionMultiplexer);
+            return services;
         }
     }
 }

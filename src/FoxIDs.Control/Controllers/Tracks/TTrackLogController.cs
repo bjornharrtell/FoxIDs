@@ -25,7 +25,7 @@ namespace FoxIDs.Controllers
         private readonly FoxIDsControlSettings settings;
         private readonly TokenCredential tokenCredential;
 
-        public TTrackLogController(FoxIDsControlSettings settings, TelemetryScopedLogger logger, TokenCredential tokenCredential) : base(logger)
+        public TTrackLogController(FoxIDsControlSettings settings, TelemetryScopedLogger logger, TokenCredential tokenCredential = null) : base(logger)
         {
             this.settings = settings;
             this.tokenCredential = tokenCredential;
